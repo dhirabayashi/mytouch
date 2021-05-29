@@ -41,6 +41,8 @@ internal class MainKtTest {
 
         // verify
         assertTrue(Files.exists(file))
-        assertEquals(FileTime.fromMillis(instant.toEpochMilli()), Files.getLastModifiedTime(file))
+        val expected = FileTime.fromMillis(instant.toEpochMilli())
+        assertEquals(expected, Files.getLastModifiedTime(file))
+        assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
     }
 }

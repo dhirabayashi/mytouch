@@ -26,7 +26,9 @@ fun touch(filename: String) {
     val file = Path.of(filename)
     if(Files.exists(file)) {
         val now = LocalDateTime.now(clock).toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
-        Files.setLastModifiedTime(file, FileTime.fromMillis(now))
+        val time = FileTime.fromMillis(now)
+        Files.setLastModifiedTime(file, time)
+        Files.setAttribute(file, "lastAccessTime", time)
     } else {
         Files.createFile(file)
     }
