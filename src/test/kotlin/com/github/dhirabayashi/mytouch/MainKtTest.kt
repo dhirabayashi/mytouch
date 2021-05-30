@@ -45,4 +45,16 @@ internal class MainKtTest {
         assertEquals(expected, Files.getLastModifiedTime(file))
         assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
     }
+
+    @Test
+    fun test_touch_newFile_noCreate(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+
+        // run
+        touch(file.toAbsolutePath().toString(), Option.NO_CREATE)
+
+        // verify
+        assertFalse(Files.exists(file))
+    }
 }
