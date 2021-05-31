@@ -37,7 +37,7 @@ internal class MainKtTest {
         clock = Clock.fixed(instant, ZoneId.of("Asia/Tokyo"))
 
         // run
-        touch(file.toAbsolutePath().toString())
+        touch(file.toAbsolutePath().toString(), Option.CHANGE_ACCESS_TIME, Option.CHANGE_MODIFICATION_TIME)
 
         // verify
         assertTrue(Files.exists(file))
@@ -56,5 +56,45 @@ internal class MainKtTest {
 
         // verify
         assertFalse(Files.exists(file))
+    }
+
+    @Test
+    fun test_touch_onlyAccessTime(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+        Files.createFile(file)
+
+        val ldt = LocalDateTime.of(2021, 5, 28, 21, 53)
+        val instant = ldt.toInstant(ZoneOffset.ofHours(9))
+        clock = Clock.fixed(instant, ZoneId.of("Asia/Tokyo"))
+
+        // run
+        touch(file.toAbsolutePath().toString(), Option.CHANGE_ACCESS_TIME)
+
+        // verify
+        assertTrue(Files.exists(file))
+        val expected = FileTime.fromMillis(instant.toEpochMilli())
+        assertNotEquals(expected, Files.getLastModifiedTime(file))
+        assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
+    }
+
+    @Test
+    fun test_touch_onlyModificationTime(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+        Files.createFile(file)
+
+        val ldt = LocalDateTime.of(2021, 5, 28, 21, 53)
+        val instant = ldt.toInstant(ZoneOffset.ofHours(9))
+        clock = Clock.fixed(instant, ZoneId.of("Asia/Tokyo"))
+
+        // run
+        touch(file.toAbsolutePath().toString(), Option.CHANGE_MODIFICATION_TIME)
+
+        // verify
+        assertTrue(Files.exists(file))
+        val expected = FileTime.fromMillis(instant.toEpochMilli())
+        assertEquals(expected, Files.getLastModifiedTime(file))
+        assertNotEquals(expected, Files.getAttribute(file, "lastAccessTime"))
     }
 }

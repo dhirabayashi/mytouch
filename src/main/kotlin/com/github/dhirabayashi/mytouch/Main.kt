@@ -22,6 +22,17 @@ fun main(args: Array<String>) {
     if(argument.c) {
         options.add(Option.NO_CREATE)
     }
+    if(argument.a) {
+        options.add(Option.CHANGE_ACCESS_TIME)
+    }
+    if(argument.m) {
+        options.add(Option.CHANGE_MODIFICATION_TIME)
+    }
+    // aオプションとmオプションのいずれも指定されない場合は、両方指定したのと同じ動作にする
+    if(!argument.a && !argument.m) {
+        options.add(Option.CHANGE_ACCESS_TIME)
+        options.add(Option.CHANGE_MODIFICATION_TIME)
+    }
 
     // 実行
     argument.files?.forEach {
@@ -35,8 +46,14 @@ fun touch(filename: String, vararg options: Option) {
     if(Files.exists(file)) {
         val now = LocalDateTime.now(clock).toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
         val time = FileTime.fromMillis(now)
-        Files.setLastModifiedTime(file, time)
-        Files.setAttribute(file, "lastAccessTime", time)
+
+        if(optionsSet.contains(Option.CHANGE_MODIFICATION_TIME)) {
+            Files.setLastModifiedTime(file, time)
+        }
+
+        if(optionsSet.contains(Option.CHANGE_ACCESS_TIME)) {
+            Files.setAttribute(file, "lastAccessTime", time)
+        }
     } else if(!optionsSet.contains(Option.NO_CREATE)) {
         Files.createFile(file)
     }
@@ -46,5 +63,15 @@ enum class Option {
     /**
      * ファイルを作成しない
      */
-    NO_CREATE
+    NO_CREATE,
+
+    /**
+     * 最終アクセス日時を更新する
+     */
+    CHANGE_ACCESS_TIME,
+
+    /**
+     * 最終更新日時を更新する
+      */
+    CHANGE_MODIFICATION_TIME,
 }
