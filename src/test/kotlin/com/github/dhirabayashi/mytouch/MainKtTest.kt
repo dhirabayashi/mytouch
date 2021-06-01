@@ -1,16 +1,13 @@
 package com.github.dhirabayashi.mytouch
 
-import org.junit.jupiter.api.Test
-
+import com.github.dhirabayashi.mytouch.data.OptionType.*
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.FileTime
-import java.time.Clock
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
+import java.time.*
 
 internal class MainKtTest {
 
@@ -20,7 +17,7 @@ internal class MainKtTest {
         val file = tempDir.resolve("test.txt")
 
         // run
-        touch(file.toAbsolutePath().toString())
+        touch(file.toAbsolutePath().toString(), mapOf())
 
         // verify
         assertTrue(Files.exists(file))
@@ -32,13 +29,12 @@ internal class MainKtTest {
         val file = tempDir.resolve("test.txt")
         Files.createFile(file)
 
-        val ldt = LocalDateTime.of(2021, 5, 28, 21, 53)
-        val instant = ldt.toInstant(ZoneOffset.ofHours(9))
-        clock = Clock.fixed(instant, ZoneId.of("Asia/Tokyo"))
+        val instant = instantOf(2021, 5, 28, 21, 53)
+        clock = fixedClock(instant)
 
         // run
-        touch(file.toAbsolutePath().toString(), Option.CHANGE_ACCESS_TIME, Option.CHANGE_MODIFICATION_TIME)
-
+        val options = mapOf(CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
+        touch(file.toAbsolutePath().toString(), options)
         // verify
         assertTrue(Files.exists(file))
         val expected = FileTime.fromMillis(instant.toEpochMilli())
@@ -52,7 +48,7 @@ internal class MainKtTest {
         val file = tempDir.resolve("test.txt")
 
         // run
-        touch(file.toAbsolutePath().toString(), Option.NO_CREATE)
+        touch(file.toAbsolutePath().toString(), mapOf(NO_CREATE to null))
 
         // verify
         assertFalse(Files.exists(file))
@@ -64,12 +60,11 @@ internal class MainKtTest {
         val file = tempDir.resolve("test.txt")
         Files.createFile(file)
 
-        val ldt = LocalDateTime.of(2021, 5, 28, 21, 53)
-        val instant = ldt.toInstant(ZoneOffset.ofHours(9))
-        clock = Clock.fixed(instant, ZoneId.of("Asia/Tokyo"))
+        val instant = instantOf(2021, 5, 28, 21, 53)
+        clock = fixedClock(instant)
 
         // run
-        touch(file.toAbsolutePath().toString(), Option.CHANGE_ACCESS_TIME)
+        touch(file.toAbsolutePath().toString(), mapOf(CHANGE_ACCESS_TIME to null))
 
         // verify
         assertTrue(Files.exists(file))
@@ -84,17 +79,48 @@ internal class MainKtTest {
         val file = tempDir.resolve("test.txt")
         Files.createFile(file)
 
-        val ldt = LocalDateTime.of(2021, 5, 28, 21, 53)
-        val instant = ldt.toInstant(ZoneOffset.ofHours(9))
-        clock = Clock.fixed(instant, ZoneId.of("Asia/Tokyo"))
+        val instant = instantOf(2021, 5, 28, 21, 53)
+        clock = fixedClock(instant)
 
         // run
-        touch(file.toAbsolutePath().toString(), Option.CHANGE_MODIFICATION_TIME)
+        touch(file.toAbsolutePath().toString(), mapOf(CHANGE_MODIFICATION_TIME to null))
 
         // verify
         assertTrue(Files.exists(file))
         val expected = FileTime.fromMillis(instant.toEpochMilli())
         assertEquals(expected, Files.getLastModifiedTime(file))
         assertNotEquals(expected, Files.getAttribute(file, "lastAccessTime"))
+    }
+
+    @Test
+    fun test_touch_useTimeFromAnotherFile(@TempDir tempDir: Path) {
+        // setup
+        val targetFile = tempDir.resolve("target.txt")
+        Files.createFile(targetFile)
+        val anotherFile = tempDir.resolve("another.txt")
+        Files.createFile(anotherFile)
+
+        val accessTime = FileTime.fromMillis(instantOf(2019, 1, 2, 3, 4).toEpochMilli())
+        val modificationTime = FileTime.fromMillis(instantOf(2020, 2, 3, 4 ,5).toEpochMilli())
+        Files.setAttribute(anotherFile, "lastAccessTime", accessTime)
+        Files.setLastModifiedTime(anotherFile, modificationTime)
+
+        // run
+        val options = mapOf(USE_TIMES_FROM_ANOTHER_FILE to anotherFile.toAbsolutePath().toString(),
+            CHANGE_MODIFICATION_TIME to null, CHANGE_ACCESS_TIME to null)
+        touch(targetFile.toAbsolutePath().toString(), options)
+
+        // verify
+        assertEquals(accessTime, Files.getAttribute(targetFile, "lastAccessTime"))
+        assertEquals(modificationTime, Files.getLastModifiedTime(targetFile))
+    }
+
+    private fun instantOf(year: Int, month: Int, dayOfMonth: Int, hour: Int, minute: Int): Instant {
+        val ldt = LocalDateTime.of(year, month, dayOfMonth, hour, minute)
+        return ldt.toInstant(ZoneOffset.ofHours(9))
+    }
+
+    private fun fixedClock(instant: Instant): Clock {
+        return Clock.fixed(instant, ZoneId.of("Asia/Tokyo"))
     }
 }
