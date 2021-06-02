@@ -115,6 +115,19 @@ internal class MainKtTest {
         assertEquals(modificationTime, Files.getLastModifiedTime(targetFile))
     }
 
+    @Test
+    fun test_touch_useTimeNonexistentFile(@TempDir tempDir: Path) {
+        // setup
+        val targetFile = tempDir.resolve("target.txt")
+        Files.createFile(targetFile)
+
+        // run
+        val options = mapOf(USE_TIMES_FROM_ANOTHER_FILE to "nonexistent.txt",
+            CHANGE_MODIFICATION_TIME to null, CHANGE_ACCESS_TIME to null)
+        // 例外が投げられない
+        touch(targetFile.toAbsolutePath().toString(), options)
+    }
+
     private fun instantOf(year: Int, month: Int, dayOfMonth: Int, hour: Int, minute: Int): Instant {
         val ldt = LocalDateTime.of(year, month, dayOfMonth, hour, minute)
         return ldt.toInstant(ZoneOffset.ofHours(9))

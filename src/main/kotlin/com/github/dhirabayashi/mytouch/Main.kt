@@ -54,6 +54,11 @@ fun touch(filename: String, options: Map<OptionType, String?>) {
         val modificationTime: FileTime
         if(options.contains(USE_TIMES_FROM_ANOTHER_FILE)) {
             val refFile = Path.of(options[USE_TIMES_FROM_ANOTHER_FILE])
+            if(!Files.exists(refFile)) {
+                System.err.println("mytouch: $refFile: No such file or directory")
+                return
+            }
+
             accessTime = Files.getAttribute(refFile, "lastAccessTime") as FileTime
             modificationTime = Files.getLastModifiedTime(refFile)
         } else {
