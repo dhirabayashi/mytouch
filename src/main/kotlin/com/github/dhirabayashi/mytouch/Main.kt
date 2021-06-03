@@ -39,13 +39,21 @@ fun main(args: Array<String>) {
         options[USE_TIMES_FROM_ANOTHER_FILE] = argument.r
     }
 
+    // 終了コード
+    var exitCode = 0
+
     // 実行
     argument.files?.forEach {
-        touch(it, options)
+        val ret = touch(it, options)
+        if(ret != 0) {
+            exitCode = ret
+        }
     }
+
+    System.exit(exitCode)
 }
 
-fun touch(filename: String, options: Map<OptionType, String?>) {
+fun touch(filename: String, options: Map<OptionType, String?>): Int {
     val file = Path.of(filename)
     if(Files.exists(file)) {
 
@@ -56,7 +64,7 @@ fun touch(filename: String, options: Map<OptionType, String?>) {
             val refFile = Path.of(options[USE_TIMES_FROM_ANOTHER_FILE])
             if(!Files.exists(refFile)) {
                 System.err.println("mytouch: $refFile: No such file or directory")
-                return
+                return 1
             }
 
             accessTime = Files.getAttribute(refFile, "lastAccessTime") as FileTime
@@ -78,4 +86,5 @@ fun touch(filename: String, options: Map<OptionType, String?>) {
     } else if(!options.contains(NO_CREATE)) {
         Files.createFile(file)
     }
+    return 0
 }

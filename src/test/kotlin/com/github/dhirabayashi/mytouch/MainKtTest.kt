@@ -17,10 +17,11 @@ internal class MainKtTest {
         val file = tempDir.resolve("test.txt")
 
         // run
-        touch(file.toAbsolutePath().toString(), mapOf())
+        val exitCode = touch(file.toAbsolutePath().toString(), mapOf())
 
         // verify
         assertTrue(Files.exists(file))
+        assertEquals(0, exitCode)
     }
 
     @Test
@@ -34,12 +35,13 @@ internal class MainKtTest {
 
         // run
         val options = mapOf(CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
-        touch(file.toAbsolutePath().toString(), options)
+        val exitCode = touch(file.toAbsolutePath().toString(), options)
         // verify
         assertTrue(Files.exists(file))
         val expected = FileTime.fromMillis(instant.toEpochMilli())
         assertEquals(expected, Files.getLastModifiedTime(file))
         assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(0, exitCode)
     }
 
     @Test
@@ -48,10 +50,11 @@ internal class MainKtTest {
         val file = tempDir.resolve("test.txt")
 
         // run
-        touch(file.toAbsolutePath().toString(), mapOf(NO_CREATE to null))
+        val exitCode = touch(file.toAbsolutePath().toString(), mapOf(NO_CREATE to null))
 
         // verify
         assertFalse(Files.exists(file))
+        assertEquals(0, exitCode)
     }
 
     @Test
@@ -64,13 +67,14 @@ internal class MainKtTest {
         clock = fixedClock(instant)
 
         // run
-        touch(file.toAbsolutePath().toString(), mapOf(CHANGE_ACCESS_TIME to null))
+        val exitCode = touch(file.toAbsolutePath().toString(), mapOf(CHANGE_ACCESS_TIME to null))
 
         // verify
         assertTrue(Files.exists(file))
         val expected = FileTime.fromMillis(instant.toEpochMilli())
         assertNotEquals(expected, Files.getLastModifiedTime(file))
         assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(0, exitCode)
     }
 
     @Test
@@ -83,13 +87,14 @@ internal class MainKtTest {
         clock = fixedClock(instant)
 
         // run
-        touch(file.toAbsolutePath().toString(), mapOf(CHANGE_MODIFICATION_TIME to null))
+        val exitCode = touch(file.toAbsolutePath().toString(), mapOf(CHANGE_MODIFICATION_TIME to null))
 
         // verify
         assertTrue(Files.exists(file))
         val expected = FileTime.fromMillis(instant.toEpochMilli())
         assertEquals(expected, Files.getLastModifiedTime(file))
         assertNotEquals(expected, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(0, exitCode)
     }
 
     @Test
@@ -108,11 +113,12 @@ internal class MainKtTest {
         // run
         val options = mapOf(USE_TIMES_FROM_ANOTHER_FILE to anotherFile.toAbsolutePath().toString(),
             CHANGE_MODIFICATION_TIME to null, CHANGE_ACCESS_TIME to null)
-        touch(targetFile.toAbsolutePath().toString(), options)
+        val exitCode = touch(targetFile.toAbsolutePath().toString(), options)
 
         // verify
         assertEquals(accessTime, Files.getAttribute(targetFile, "lastAccessTime"))
         assertEquals(modificationTime, Files.getLastModifiedTime(targetFile))
+        assertEquals(0, exitCode)
     }
 
     @Test
@@ -125,7 +131,8 @@ internal class MainKtTest {
         val options = mapOf(USE_TIMES_FROM_ANOTHER_FILE to "nonexistent.txt",
             CHANGE_MODIFICATION_TIME to null, CHANGE_ACCESS_TIME to null)
         // 例外が投げられない
-        touch(targetFile.toAbsolutePath().toString(), options)
+        val exitCode = touch(targetFile.toAbsolutePath().toString(), options)
+        assertNotEquals(0, exitCode)
     }
 
     private fun instantOf(year: Int, month: Int, dayOfMonth: Int, hour: Int, minute: Int): Instant {
