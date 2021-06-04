@@ -9,6 +9,7 @@ import java.nio.file.attribute.FileTime
 import java.time.Clock
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 var clock: Clock = Clock.systemDefaultZone()
 
@@ -37,6 +38,9 @@ fun main(args: Array<String>) {
     }
     if(argument.r != null) {
         options[USE_TIMES_FROM_ANOTHER_FILE] = argument.r
+    }
+    if(argument.t != null) {
+        options[USE_SPECIFIED_TIME] = argument.t
     }
 
     // 終了コード
@@ -69,6 +73,10 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
 
             accessTime = Files.getAttribute(refFile, "lastAccessTime") as FileTime
             modificationTime = Files.getLastModifiedTime(refFile)
+        } else if(options.contains(USE_SPECIFIED_TIME)) {
+            val time = parseDate(options[USE_SPECIFIED_TIME]!!)
+            accessTime = time
+            modificationTime = time
         } else {
             val now = LocalDateTime.now(clock).toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
             val time = FileTime.fromMillis(now)
@@ -87,4 +95,10 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
         Files.createFile(file)
     }
     return 0
+}
+
+fun parseDate(strDate: String): FileTime {
+    val formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+    val epochMilli = LocalDateTime.parse(strDate, formatter).toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
+    return FileTime.fromMillis(epochMilli)
 }

@@ -132,7 +132,27 @@ internal class MainKtTest {
             CHANGE_MODIFICATION_TIME to null, CHANGE_ACCESS_TIME to null)
         // 例外が投げられない
         val exitCode = touch(targetFile.toAbsolutePath().toString(), options)
+
+        // verify
         assertNotEquals(0, exitCode)
+    }
+
+    @Test
+    fun test_touch_useSpecifiedTime(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+        Files.createFile(file)
+
+        // run
+        val options = mapOf(USE_SPECIFIED_TIME to "20210528215300",
+        CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
+        val exitCode = touch(file.toAbsolutePath().toString(), options)
+
+        // verify
+        val expected = FileTime.fromMillis(instantOf(2021, 5, 28, 21, 53).toEpochMilli())
+        assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(expected, Files.getLastModifiedTime(file))
+        assertEquals(0, exitCode)
     }
 
     private fun instantOf(year: Int, month: Int, dayOfMonth: Int, hour: Int, minute: Int): Instant {

@@ -20,4 +20,9 @@ enum class OptionType {
      * 指定したファイルの日付を使用する
      */
     USE_TIMES_FROM_ANOTHER_FILE,
+
+    /**
+     * 指定した日付を使用する
+     */
+    USE_SPECIFIED_TIME,
 }
