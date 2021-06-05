@@ -155,6 +155,26 @@ internal class MainKtTest {
         assertEquals(0, exitCode)
     }
 
+    @Test
+    fun test_touch_useSpecifiedTime_illegalFormat(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+        Files.createFile(file)
+
+        val expectedAccessTime = Files.getAttribute(file, "lastAccessTime")
+        val expectedModificationTime = Files.getLastModifiedTime(file)
+
+        // run
+        val options = mapOf(USE_SPECIFIED_TIME to "illegal",
+            CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
+        val exitCode = touch(file.toAbsolutePath().toString(), options)
+
+        // verify
+        assertEquals(expectedAccessTime, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(expectedModificationTime, Files.getLastModifiedTime(file))
+        assertNotEquals(0, exitCode)
+    }
+
     private fun instantOf(year: Int, month: Int, dayOfMonth: Int, hour: Int, minute: Int): Instant {
         val ldt = LocalDateTime.of(year, month, dayOfMonth, hour, minute)
         return ldt.toInstant(ZoneOffset.ofHours(9))

@@ -10,6 +10,7 @@ import java.time.Clock
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 var clock: Clock = Clock.systemDefaultZone()
 
@@ -74,9 +75,14 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
             accessTime = Files.getAttribute(refFile, "lastAccessTime") as FileTime
             modificationTime = Files.getLastModifiedTime(refFile)
         } else if(options.contains(USE_SPECIFIED_TIME)) {
-            val time = parseDate(options[USE_SPECIFIED_TIME]!!)
-            accessTime = time
-            modificationTime = time
+            try {
+                val time = parseDate(options[USE_SPECIFIED_TIME]!!)
+                accessTime = time
+                modificationTime = time
+            } catch (e: DateTimeParseException) {
+                System.err.println("mytouch: out of range or illegal time specification: [[CC]YY]MMDDhhmm[.SS]")
+                return 1
+            }
         } else {
             val now = LocalDateTime.now(clock).toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
             val time = FileTime.fromMillis(now)
