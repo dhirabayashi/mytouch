@@ -144,12 +144,30 @@ internal class MainKtTest {
         Files.createFile(file)
 
         // run
-        val options = mapOf(USE_SPECIFIED_TIME to "20210528215300",
+        val options = mapOf(USE_SPECIFIED_TIME to "202105282153",
         CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
         val exitCode = touch(file.toAbsolutePath().toString(), options)
 
         // verify
         val expected = FileTime.fromMillis(instantOf(2021, 5, 28, 21, 53).toEpochMilli())
+        assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(expected, Files.getLastModifiedTime(file))
+        assertEquals(0, exitCode)
+    }
+
+    @Test
+    fun test_touch_useSpecifiedTime_withSecond(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+        Files.createFile(file)
+
+        // run
+        val options = mapOf(USE_SPECIFIED_TIME to "202105282153.23",
+            CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
+        val exitCode = touch(file.toAbsolutePath().toString(), options)
+
+        // verify
+        val expected = FileTime.fromMillis(instantOf(2021, 5, 28, 21, 53, 23).toEpochMilli())
         assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
         assertEquals(expected, Files.getLastModifiedTime(file))
         assertEquals(0, exitCode)
@@ -176,9 +194,14 @@ internal class MainKtTest {
     }
 
     private fun instantOf(year: Int, month: Int, dayOfMonth: Int, hour: Int, minute: Int): Instant {
-        val ldt = LocalDateTime.of(year, month, dayOfMonth, hour, minute)
+        return instantOf(year, month, dayOfMonth, hour, minute, 0)
+    }
+
+    private fun instantOf(year: Int, month: Int, dayOfMonth: Int, hour: Int, minute: Int, second: Int): Instant {
+        val ldt = LocalDateTime.of(year, month, dayOfMonth, hour, minute, second)
         return ldt.toInstant(ZoneOffset.ofHours(9))
     }
+
 
     private fun fixedClock(instant: Instant): Clock {
         return Clock.fixed(instant, ZoneId.of("Asia/Tokyo"))

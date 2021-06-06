@@ -104,7 +104,13 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
 }
 
 fun parseDate(strDate: String): FileTime {
-    val formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+    val formatter: DateTimeFormatter
+    if(strDate.contains(".")) {
+        formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm.ss")
+    } else {
+        formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm")
+    }
+
     val epochMilli = LocalDateTime.parse(strDate, formatter).toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
     return FileTime.fromMillis(epochMilli)
 }
