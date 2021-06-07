@@ -103,14 +103,30 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
     return 0
 }
 
-fun parseDate(strDate: String): FileTime {
-    val formatter: DateTimeFormatter
-    if(strDate.contains(".")) {
-        formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm.ss")
+fun parseDate(paramDate: String): FileTime {
+    val formatter = if(paramDate.contains(".")) {
+        DateTimeFormatter.ofPattern("yyyyMMddHHmm.ss")
     } else {
-        formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm")
+        DateTimeFormatter.ofPattern("yyyyMMddHHmm")
     }
 
-    val epochMilli = LocalDateTime.parse(strDate, formatter).toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
+    // 年が2桁指定の場合、69〜99なら1900年代、それ以外なら2000年代となる
+    val date = complementCentury(paramDate)
+
+    val epochMilli = LocalDateTime.parse(date, formatter).toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
     return FileTime.fromMillis(epochMilli)
+}
+
+fun complementCentury(strDate: String): String {
+    // 年が2桁指定の場合、69〜99なら1900年代、それ以外なら2000年代となる
+    return if (strDate.length == 10) {
+        val yy = strDate.substring(0, 2).toInt()
+        if (yy in 69..99) {
+            "19$strDate"
+        } else {
+            "20$strDate"
+        }
+    } else {
+        strDate
+    }
 }

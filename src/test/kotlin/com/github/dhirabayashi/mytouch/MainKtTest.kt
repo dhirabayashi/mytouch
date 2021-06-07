@@ -174,6 +174,24 @@ internal class MainKtTest {
     }
 
     @Test
+    fun test_touch_useSpecifiedTime_withoutCentury(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+        Files.createFile(file)
+
+        // run
+        val options = mapOf(USE_SPECIFIED_TIME to "2105282153",
+            CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
+        val exitCode = touch(file.toAbsolutePath().toString(), options)
+
+        // verify
+        val expected = FileTime.fromMillis(instantOf(2021, 5, 28, 21, 53).toEpochMilli())
+        assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(expected, Files.getLastModifiedTime(file))
+        assertEquals(0, exitCode)
+    }
+
+    @Test
     fun test_touch_useSpecifiedTime_illegalFormat(@TempDir tempDir: Path) {
         // setup
         val file = tempDir.resolve("test.txt")
@@ -193,6 +211,19 @@ internal class MainKtTest {
         assertNotEquals(0, exitCode)
     }
 
+    @Test
+    fun test_complementCentury() {
+        assertEquals("202106071234", complementCentury("202106071234"))
+
+        assertEquals("206806071234", complementCentury("6806071234"))
+        assertEquals("196906071234", complementCentury("6906071234"))
+
+        assertEquals("202106071234", complementCentury("2106071234"))
+
+        assertEquals("199906071234", complementCentury("9906071234"))
+        assertEquals("200006071234", complementCentury("0006071234"))
+    }
+
     private fun instantOf(year: Int, month: Int, dayOfMonth: Int, hour: Int, minute: Int): Instant {
         return instantOf(year, month, dayOfMonth, hour, minute, 0)
     }
@@ -201,7 +232,6 @@ internal class MainKtTest {
         val ldt = LocalDateTime.of(year, month, dayOfMonth, hour, minute, second)
         return ldt.toInstant(ZoneOffset.ofHours(9))
     }
-
 
     private fun fixedClock(instant: Instant): Clock {
         return Clock.fixed(instant, ZoneId.of("Asia/Tokyo"))
