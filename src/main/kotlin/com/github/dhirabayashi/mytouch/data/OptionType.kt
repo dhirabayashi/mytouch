@@ -25,4 +25,9 @@ enum class OptionType {
      * 指定した日付を使用する
      */
     USE_SPECIFIED_TIME,
+
+    /**
+     * タイムスタンプを補正する
+     */
+    ADJUST_TIME,
 }

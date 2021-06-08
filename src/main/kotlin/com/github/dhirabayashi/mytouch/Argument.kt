@@ -20,4 +20,7 @@ class Argument {
 
     @Parameter(names = ["-t"], description = "Change the access and modification times to the specified time instead of the current time of day.")
     internal var t: String? = null
+
+    @Parameter(names = ["-A"], description = "Adjust the access and modification time stamps for the file by the specified value.")
+    internal var ad: Boolean = false
 }

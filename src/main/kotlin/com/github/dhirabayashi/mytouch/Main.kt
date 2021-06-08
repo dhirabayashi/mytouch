@@ -43,6 +43,10 @@ fun main(args: Array<String>) {
     if(argument.t != null) {
         options[USE_SPECIFIED_TIME] = argument.t
     }
+    if(argument.ad) {
+        options[ADJUST_TIME] = null
+        options[NO_CREATE] = null
+    }
 
     // 終了コード
     var exitCode = 0
@@ -65,29 +69,33 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
         // 書き換える日付
         val accessTime: FileTime
         val modificationTime: FileTime
-        if(options.contains(USE_TIMES_FROM_ANOTHER_FILE)) {
-            val refFile = Path.of(options[USE_TIMES_FROM_ANOTHER_FILE])
-            if(!Files.exists(refFile)) {
-                System.err.println("mytouch: $refFile: No such file or directory")
-                return 1
-            }
+        when {
+            options.contains(USE_TIMES_FROM_ANOTHER_FILE) -> {
+                val refFile = Path.of(options[USE_TIMES_FROM_ANOTHER_FILE])
+                if(!Files.exists(refFile)) {
+                    System.err.println("mytouch: $refFile: No such file or directory")
+                    return 1
+                }
 
-            accessTime = Files.getAttribute(refFile, "lastAccessTime") as FileTime
-            modificationTime = Files.getLastModifiedTime(refFile)
-        } else if(options.contains(USE_SPECIFIED_TIME)) {
-            try {
-                val time = parseDate(options[USE_SPECIFIED_TIME]!!)
+                accessTime = Files.getAttribute(refFile, "lastAccessTime") as FileTime
+                modificationTime = Files.getLastModifiedTime(refFile)
+            }
+            options.contains(USE_SPECIFIED_TIME) -> {
+                try {
+                    val time = parseDate(options[USE_SPECIFIED_TIME]!!)
+                    accessTime = time
+                    modificationTime = time
+                } catch (e: DateTimeParseException) {
+                    System.err.println("mytouch: out of range or illegal time specification: [[CC]YY]MMDDhhmm[.SS]")
+                    return 1
+                }
+            }
+            else -> {
+                val now = LocalDateTime.now(clock).toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
+                val time = FileTime.fromMillis(now)
                 accessTime = time
                 modificationTime = time
-            } catch (e: DateTimeParseException) {
-                System.err.println("mytouch: out of range or illegal time specification: [[CC]YY]MMDDhhmm[.SS]")
-                return 1
             }
-        } else {
-            val now = LocalDateTime.now(clock).toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
-            val time = FileTime.fromMillis(now)
-            accessTime = time
-            modificationTime = time
         }
 
         if(options.contains(CHANGE_MODIFICATION_TIME)) {
