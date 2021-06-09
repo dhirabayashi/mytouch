@@ -8,9 +8,11 @@ import java.nio.file.Path
 import java.nio.file.attribute.FileTime
 import java.time.Clock
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import kotlin.system.exitProcess
 
 var clock: Clock = Clock.systemDefaultZone()
 
@@ -43,8 +45,8 @@ fun main(args: Array<String>) {
     if(argument.t != null) {
         options[USE_SPECIFIED_TIME] = argument.t
     }
-    if(argument.ad) {
-        options[ADJUST_TIME] = null
+    if(argument.ad != null) {
+        options[ADJUST_TIME] = argument.ad
         options[NO_CREATE] = null
     }
 
@@ -59,7 +61,7 @@ fun main(args: Array<String>) {
         }
     }
 
-    System.exit(exitCode)
+    exitProcess(exitCode)
 }
 
 fun touch(filename: String, options: Map<OptionType, String?>): Int {
@@ -90,7 +92,19 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
                     return 1
                 }
             }
-            else -> {
+            options.contains(ADJUST_TIME) -> {
+                val ss = options[ADJUST_TIME]?.toLong()
+
+                val currentAccessTime = Files.getAttribute(file, "lastAccessTime") as FileTime
+                val accessTimeLdt = LocalDateTime.ofInstant(currentAccessTime.toInstant(), ZoneId.of("Asia/Tokyo"))
+                accessTime = FileTime.fromMillis(
+                    accessTimeLdt.plusSeconds(ss!!).toInstant(ZoneOffset.ofHours(9)).toEpochMilli())
+
+                val currentModificationTime = Files.getLastModifiedTime(file)
+                val modificationTimeLdt = LocalDateTime.ofInstant(currentModificationTime.toInstant(), ZoneId.of("Asia/Tokyo"))
+                modificationTime = FileTime.fromMillis(
+                    modificationTimeLdt.plusSeconds(ss).toInstant(ZoneOffset.ofHours(9)).toEpochMilli())
+            } else -> {
                 val now = LocalDateTime.now(clock).toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
                 val time = FileTime.fromMillis(now)
                 accessTime = time

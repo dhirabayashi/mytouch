@@ -22,5 +22,5 @@ class Argument {
     internal var t: String? = null
 
     @Parameter(names = ["-A"], description = "Adjust the access and modification time stamps for the file by the specified value.")
-    internal var ad: Boolean = false
+    internal var ad: String? = null
 }
