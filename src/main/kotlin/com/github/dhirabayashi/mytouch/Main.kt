@@ -93,19 +93,43 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
                 }
             }
             options.contains(ADJUST_TIME) -> {
-                val ss = options[ADJUST_TIME]?.toLong()
+                val num = options[ADJUST_TIME]
+                val mm: Long?
+                val ss: Long?
+                when {
+                    num!!.length == 2 -> {
+                        mm = null
+                        ss = num.toLong()
+                    }
+                    num.length == 4 -> {
+                        mm = num.substring(0, 2).toLong()
+                        ss = num.substring(2, 4).toLong()
+                    }
+                    else -> {
+                        mm = null
+                        ss = null
+                    }
+                }
 
                 val currentAccessTime = Files.getAttribute(file, "lastAccessTime") as FileTime
-                val accessTimeLdt = LocalDateTime.ofInstant(currentAccessTime.toInstant(), ZoneId.of("Asia/Tokyo"))
-                accessTime = FileTime.fromMillis(
-                    accessTimeLdt.plusSeconds(ss!!).toInstant(ZoneOffset.ofHours(9)).toEpochMilli())
+                val currentModTime = Files.getLastModifiedTime(file)
 
-                val currentModificationTime = Files.getLastModifiedTime(file)
-                val modificationTimeLdt = LocalDateTime.ofInstant(currentModificationTime.toInstant(), ZoneId.of("Asia/Tokyo"))
-                modificationTime = FileTime.fromMillis(
-                    modificationTimeLdt.plusSeconds(ss).toInstant(ZoneOffset.ofHours(9)).toEpochMilli())
+                var accessTimeLdt = LocalDateTime.ofInstant(currentAccessTime.toInstant(), ZoneId.of("Asia/Tokyo"))
+                var modTimeLdt = LocalDateTime.ofInstant(currentModTime.toInstant(), ZoneId.of("Asia/Tokyo"))
+
+                if(mm != null) {
+                    accessTimeLdt = accessTimeLdt.plusMinutes(mm)
+                    modTimeLdt = modTimeLdt.plusMinutes(mm)
+                }
+                if(ss != null) {
+                    accessTimeLdt = accessTimeLdt.plusSeconds(ss)
+                    modTimeLdt = modTimeLdt.plusSeconds(ss)
+                }
+
+                accessTime = FileTime.fromMillis(accessTimeLdt.toEpochMilli())
+                modificationTime = FileTime.fromMillis(modTimeLdt.toEpochMilli())
             } else -> {
-                val now = LocalDateTime.now(clock).toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
+                val now = LocalDateTime.now(clock).toEpochMilli()
                 val time = FileTime.fromMillis(now)
                 accessTime = time
                 modificationTime = time
@@ -135,7 +159,7 @@ fun parseDate(paramDate: String): FileTime {
     // 年が2桁指定の場合、69〜99なら1900年代、それ以外なら2000年代となる
     val date = complementCentury(paramDate)
 
-    val epochMilli = LocalDateTime.parse(date, formatter).toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
+    val epochMilli = LocalDateTime.parse(date, formatter).toEpochMilli()
     return FileTime.fromMillis(epochMilli)
 }
 
@@ -151,4 +175,8 @@ fun complementCentury(strDate: String): String {
     } else {
         strDate
     }
+}
+
+private fun LocalDateTime.toEpochMilli(): Long {
+    return this.toInstant(ZoneOffset.ofHours(9)).toEpochMilli()
 }

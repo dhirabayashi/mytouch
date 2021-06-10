@@ -225,7 +225,7 @@ internal class MainKtTest {
     }
 
     @Test
-    fun test_touch_adjustTime(@TempDir tempDir: Path) {
+    fun test_touch_adjustTime_ss(@TempDir tempDir: Path) {
         // setup
         val file = tempDir.resolve("test.txt")
         Files.createFile(file)
@@ -242,6 +242,29 @@ internal class MainKtTest {
         // verify
         val expected = FileTime.fromMillis(
             instantOf(2021, 5, 28, 21, 53, 11).toEpochMilli())
+        assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(expected, Files.getLastModifiedTime(file))
+        assertEquals(0, exitCode)
+    }
+
+    @Test
+    fun test_touch_adjustTime_mmss(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+        Files.createFile(file)
+
+        val fileTime = FileTime.fromMillis(instantOf(2021, 5, 28, 21, 0).toEpochMilli())
+        Files.setAttribute(file, "lastAccessTime", fileTime)
+        Files.setLastModifiedTime(file, fileTime)
+
+        // run
+        val options = mapOf(ADJUST_TIME to "1122",
+            CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
+        val exitCode = touch(file.toAbsolutePath().toString(), options)
+
+        // verify
+        val expected = FileTime.fromMillis(
+            instantOf(2021, 5, 28, 21, 11, 22).toEpochMilli())
         assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
         assertEquals(expected, Files.getLastModifiedTime(file))
         assertEquals(0, exitCode)
