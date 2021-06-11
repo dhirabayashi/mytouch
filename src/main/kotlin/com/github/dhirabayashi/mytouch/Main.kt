@@ -94,18 +94,27 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
             }
             options.contains(ADJUST_TIME) -> {
                 val num = options[ADJUST_TIME]
+                val hh: Long?
                 val mm: Long?
                 val ss: Long?
                 when {
                     num!!.length == 2 -> {
+                        hh = null
                         mm = null
                         ss = num.toLong()
                     }
                     num.length == 4 -> {
+                        hh = null
                         mm = num.substring(0, 2).toLong()
                         ss = num.substring(2, 4).toLong()
                     }
+                    num.length == 6 -> {
+                        hh = num.substring(0, 2).toLong()
+                        mm = num.substring(2, 4).toLong()
+                        ss = num.substring(4, 6).toLong()
+                    }
                     else -> {
+                        hh = null
                         mm = null
                         ss = null
                     }
@@ -117,6 +126,10 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
                 var accessTimeLdt = LocalDateTime.ofInstant(currentAccessTime.toInstant(), ZoneId.of("Asia/Tokyo"))
                 var modTimeLdt = LocalDateTime.ofInstant(currentModTime.toInstant(), ZoneId.of("Asia/Tokyo"))
 
+                if(hh != null) {
+                    accessTimeLdt = accessTimeLdt.plusHours(hh)
+                    modTimeLdt = modTimeLdt.plusHours(hh)
+                }
                 if(mm != null) {
                     accessTimeLdt = accessTimeLdt.plusMinutes(mm)
                     modTimeLdt = modTimeLdt.plusMinutes(mm)

@@ -270,6 +270,29 @@ internal class MainKtTest {
         assertEquals(0, exitCode)
     }
 
+    @Test
+    fun test_touch_adjustTime_hhmmss(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+        Files.createFile(file)
+
+        val fileTime = FileTime.fromMillis(instantOf(2021, 5, 28, 0, 0).toEpochMilli())
+        Files.setAttribute(file, "lastAccessTime", fileTime)
+        Files.setLastModifiedTime(file, fileTime)
+
+        // run
+        val options = mapOf(ADJUST_TIME to "112233",
+            CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
+        val exitCode = touch(file.toAbsolutePath().toString(), options)
+
+        // verify
+        val expected = FileTime.fromMillis(
+            instantOf(2021, 5, 28, 11, 22, 33).toEpochMilli())
+        assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(expected, Files.getLastModifiedTime(file))
+        assertEquals(0, exitCode)
+    }
+
     private fun instantOf(year: Int, month: Int, dayOfMonth: Int, hour: Int, minute: Int): Instant {
         return instantOf(year, month, dayOfMonth, hour, minute, 0)
     }
