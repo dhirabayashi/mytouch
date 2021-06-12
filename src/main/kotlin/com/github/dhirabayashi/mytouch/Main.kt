@@ -3,6 +3,7 @@ package com.github.dhirabayashi.mytouch
 import com.beust.jcommander.JCommander
 import com.github.dhirabayashi.mytouch.data.OptionType
 import com.github.dhirabayashi.mytouch.data.OptionType.*
+import java.lang.NumberFormatException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.FileTime
@@ -96,28 +97,32 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
                 val num = options[ADJUST_TIME]
                 val hh: Long?
                 val mm: Long?
-                val ss: Long?
-                when {
-                    num!!.length == 2 -> {
-                        hh = null
-                        mm = null
-                        ss = num.toLong()
+                val ss: Long
+                try {
+                    when {
+                        num!!.length == 2 -> {
+                            hh = null
+                            mm = null
+                            ss = num.toLong()
+                        }
+                        num.length == 4 -> {
+                            hh = null
+                            mm = num.substring(0, 2).toLong()
+                            ss = num.substring(2, 4).toLong()
+                        }
+                        num.length == 6 -> {
+                            hh = num.substring(0, 2).toLong()
+                            mm = num.substring(2, 4).toLong()
+                            ss = num.substring(4, 6).toLong()
+                        }
+                        else -> {
+                            System.err.println("mytouch: Invalid offset spec, must be [[HH]MM]SS")
+                            return 1
+                        }
                     }
-                    num.length == 4 -> {
-                        hh = null
-                        mm = num.substring(0, 2).toLong()
-                        ss = num.substring(2, 4).toLong()
-                    }
-                    num.length == 6 -> {
-                        hh = num.substring(0, 2).toLong()
-                        mm = num.substring(2, 4).toLong()
-                        ss = num.substring(4, 6).toLong()
-                    }
-                    else -> {
-                        hh = null
-                        mm = null
-                        ss = null
-                    }
+                } catch (e: NumberFormatException) {
+                    System.err.println("mytouch: Invalid offset spec, must be [[HH]MM]SS")
+                    return 1
                 }
 
                 val currentAccessTime = Files.getAttribute(file, "lastAccessTime") as FileTime
@@ -134,10 +139,9 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
                     accessTimeLdt = accessTimeLdt.plusMinutes(mm)
                     modTimeLdt = modTimeLdt.plusMinutes(mm)
                 }
-                if(ss != null) {
-                    accessTimeLdt = accessTimeLdt.plusSeconds(ss)
-                    modTimeLdt = modTimeLdt.plusSeconds(ss)
-                }
+                // ss
+                accessTimeLdt = accessTimeLdt.plusSeconds(ss)
+                modTimeLdt = modTimeLdt.plusSeconds(ss)
 
                 accessTime = FileTime.fromMillis(accessTimeLdt.toEpochMilli())
                 modificationTime = FileTime.fromMillis(modTimeLdt.toEpochMilli())

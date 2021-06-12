@@ -293,6 +293,48 @@ internal class MainKtTest {
         assertEquals(0, exitCode)
     }
 
+    @Test
+    fun test_touch_adjustTime_invalidOffsetLength(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+        Files.createFile(file)
+
+        val fileTime = FileTime.fromMillis(instantOf(2021, 5, 28, 0, 0).toEpochMilli())
+        Files.setAttribute(file, "lastAccessTime", fileTime)
+        Files.setLastModifiedTime(file, fileTime)
+
+        // run
+        val options = mapOf(ADJUST_TIME to "1",
+            CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
+        val exitCode = touch(file.toAbsolutePath().toString(), options)
+
+        // verify
+        assertEquals(fileTime, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(fileTime, Files.getLastModifiedTime(file))
+        assertNotEquals(0, exitCode)
+    }
+
+    @Test
+    fun test_touch_adjustTime_invalidOffsetCharacter(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+        Files.createFile(file)
+
+        val fileTime = FileTime.fromMillis(instantOf(2021, 5, 28, 0, 0).toEpochMilli())
+        Files.setAttribute(file, "lastAccessTime", fileTime)
+        Files.setLastModifiedTime(file, fileTime)
+
+        // run
+        val options = mapOf(ADJUST_TIME to "aa",
+            CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
+        val exitCode = touch(file.toAbsolutePath().toString(), options)
+
+        // verify
+        assertEquals(fileTime, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(fileTime, Files.getLastModifiedTime(file))
+        assertNotEquals(0, exitCode)
+    }
+
     private fun instantOf(year: Int, month: Int, dayOfMonth: Int, hour: Int, minute: Int): Instant {
         return instantOf(year, month, dayOfMonth, hour, minute, 0)
     }
