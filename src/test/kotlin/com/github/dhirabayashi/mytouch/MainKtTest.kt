@@ -335,6 +335,75 @@ internal class MainKtTest {
         assertNotEquals(0, exitCode)
     }
 
+    @Test
+    fun test_touch_adjustTime_ss_negative(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+        Files.createFile(file)
+
+        val fileTime = FileTime.fromMillis(instantOf(2021, 5, 28, 21, 53, 11).toEpochMilli())
+        Files.setAttribute(file, "lastAccessTime", fileTime)
+        Files.setLastModifiedTime(file, fileTime)
+
+        // run
+        val options = mapOf(ADJUST_TIME to "-11",
+            CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
+        val exitCode = touch(file.toAbsolutePath().toString(), options)
+
+        // verify
+        val expected = FileTime.fromMillis(
+            instantOf(2021, 5, 28, 21, 53, 0).toEpochMilli())
+        assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(expected, Files.getLastModifiedTime(file))
+        assertEquals(0, exitCode)
+    }
+
+    @Test
+    fun test_touch_adjustTime_mmss_negative(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+        Files.createFile(file)
+
+        val fileTime = FileTime.fromMillis(instantOf(2021, 5, 28, 21, 11, 22).toEpochMilli())
+        Files.setAttribute(file, "lastAccessTime", fileTime)
+        Files.setLastModifiedTime(file, fileTime)
+
+        // run
+        val options = mapOf(ADJUST_TIME to "-1122",
+            CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
+        val exitCode = touch(file.toAbsolutePath().toString(), options)
+
+        // verify
+        val expected = FileTime.fromMillis(
+            instantOf(2021, 5, 28, 21, 0, 0).toEpochMilli())
+        assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(expected, Files.getLastModifiedTime(file))
+        assertEquals(0, exitCode)
+    }
+
+    @Test
+    fun test_touch_adjustTime_hhmmss_negative(@TempDir tempDir: Path) {
+        // setup
+        val file = tempDir.resolve("test.txt")
+        Files.createFile(file)
+
+        val fileTime = FileTime.fromMillis(instantOf(2021, 5, 28, 11, 22, 33).toEpochMilli())
+        Files.setAttribute(file, "lastAccessTime", fileTime)
+        Files.setLastModifiedTime(file, fileTime)
+
+        // run
+        val options = mapOf(ADJUST_TIME to "-112233",
+            CHANGE_ACCESS_TIME to null, CHANGE_MODIFICATION_TIME to null)
+        val exitCode = touch(file.toAbsolutePath().toString(), options)
+
+        // verify
+        val expected = FileTime.fromMillis(
+            instantOf(2021, 5, 28, 0, 0, 0).toEpochMilli())
+        assertEquals(expected, Files.getAttribute(file, "lastAccessTime"))
+        assertEquals(expected, Files.getLastModifiedTime(file))
+        assertEquals(0, exitCode)
+    }
+
     private fun instantOf(year: Int, month: Int, dayOfMonth: Int, hour: Int, minute: Int): Instant {
         return instantOf(year, month, dayOfMonth, hour, minute, 0)
     }

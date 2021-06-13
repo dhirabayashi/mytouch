@@ -94,26 +94,34 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
                 }
             }
             options.contains(ADJUST_TIME) -> {
-                val num = options[ADJUST_TIME]
+                var num = options[ADJUST_TIME]
+                val sign: Int
+                if(num!!.startsWith("-")) {
+                    sign = -1
+                    num = num.substring(1)
+                } else {
+                    sign = 1
+                }
+
                 val hh: Long?
                 val mm: Long?
                 val ss: Long
                 try {
-                    when {
-                        num!!.length == 2 -> {
+                    when (num.length) {
+                        2 -> {
                             hh = null
                             mm = null
-                            ss = num.toLong()
+                            ss = num.toLong() * sign
                         }
-                        num.length == 4 -> {
+                        4 -> {
                             hh = null
-                            mm = num.substring(0, 2).toLong()
-                            ss = num.substring(2, 4).toLong()
+                            mm = num.substring(0, 2).toLong() * sign
+                            ss = num.substring(2, 4).toLong() * sign
                         }
-                        num.length == 6 -> {
-                            hh = num.substring(0, 2).toLong()
-                            mm = num.substring(2, 4).toLong()
-                            ss = num.substring(4, 6).toLong()
+                        6 -> {
+                            hh = num.substring(0, 2).toLong() * sign
+                            mm = num.substring(2, 4).toLong() * sign
+                            ss = num.substring(4, 6).toLong() * sign
                         }
                         else -> {
                             System.err.println("mytouch: Invalid offset spec, must be [[HH]MM]SS")
