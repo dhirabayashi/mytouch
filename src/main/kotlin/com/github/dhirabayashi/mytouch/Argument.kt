@@ -23,4 +23,7 @@ class Argument {
 
     @Parameter(names = ["-A"], description = "Adjust the access and modification time stamps for the file by the specified value.")
     internal var ad: String? = null
+
+    @Parameter(names = ["-h"], description = "If the file is a symbolic link, change the times of the link itself rather than the file that the link points to.")
+    internal var h: Boolean = false
 }
