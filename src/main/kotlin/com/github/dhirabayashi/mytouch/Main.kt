@@ -81,7 +81,7 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
                 }
 
                 accessTime = Files.getAttribute(refFile, "lastAccessTime") as FileTime
-                modificationTime = Files.getLastModifiedTime(refFile)
+                modificationTime = Files.getAttribute(refFile, "lastModifiedTime") as FileTime
             }
             options.contains(USE_SPECIFIED_TIME) -> {
                 try {
@@ -134,7 +134,7 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
                 }
 
                 val currentAccessTime = Files.getAttribute(file, "lastAccessTime") as FileTime
-                val currentModTime = Files.getLastModifiedTime(file)
+                val currentModTime = Files.getAttribute(file, "lastModifiedTime") as FileTime
 
                 var accessTimeLdt = LocalDateTime.ofInstant(currentAccessTime.toInstant(), ZoneId.of("Asia/Tokyo"))
                 var modTimeLdt = LocalDateTime.ofInstant(currentModTime.toInstant(), ZoneId.of("Asia/Tokyo"))
@@ -162,7 +162,7 @@ fun touch(filename: String, options: Map<OptionType, String?>): Int {
         }
 
         if(options.contains(CHANGE_MODIFICATION_TIME)) {
-            Files.setLastModifiedTime(file, modificationTime)
+            Files.setAttribute(file, "lastModifiedTime", modificationTime)
         }
 
         if(options.contains(CHANGE_ACCESS_TIME)) {
