@@ -30,9 +30,4 @@ enum class OptionType {
      * タイムスタンプを補正する
      */
     ADJUST_TIME,
-
-    /**
-     * シンボリックリンク自身を対象とする
-     */
-    NO_DEREFERENCE
 }
